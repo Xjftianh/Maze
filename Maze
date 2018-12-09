@@ -1,0 +1,153 @@
+#include"stdio.h"
+#include<malloc.h>
+#include<windows.h>
+#include<conio.h>
+#define X 7
+#define Y 7
+//定义一个人
+typedef struct person
+{
+    int posx;//定义人所处的坐标
+    int posy;
+    int dir;//1,2,3,4表示上下左右
+} PERSON;
+
+//建立栈的结构体及栈顶栈尾指针结构体
+typedef struct stack
+{
+    PERSON Pdata;
+    struct stack *next;
+} Stack,*StackPt;
+typedef struct
+{
+    StackPt top;
+    StackPt base;
+} StPoint;
+//建立空栈
+void Create_a_Stack(StPoint p)
+{
+    p.top=p.base=(StackPt)malloc(sizeof(Stack));
+    if(!p.top)
+        exit(0);
+    p.base->next=NULL;
+}
+//入栈
+void Putin_a_data(StPoint *p,PERSON e)
+{
+    StackPt pt;
+    pt=(StackPt)malloc(sizeof(Stack));
+    if(!pt)
+        exit(0);
+    pt->Pdata=e;
+    pt->next=p->top;
+    p->top=pt;
+}
+//出栈
+void Output_a_data(StPoint *p,PERSON *e)
+{
+    e->dir=p->top->Pdata.dir;
+    e->posx=p->top->Pdata.posx;
+    e->posy=p->top->Pdata.posy;
+    p->top=p->top->next;
+}
+//建立迷宫:从上到下0-9行，从左至右0-9行
+int Maze[Y][X]=
+{
+    {1,1,1,1,1,1,1},
+    {1,0,0,1,0,0,1},//左上角是起点，2是终点
+    {1,0,0,1,1,0,1},
+    {1,0,0,0,0,0,1},
+    {1,0,0,1,1,1,1},
+    {1,0,0,0,0,0,1},
+    {1,1,1,2,1,1,1},
+};
+//打印当前迷宫状态
+void Prt_Maze(int posy,int posx)
+{
+    int a=300000000;
+    while(a--);
+    system("cls");
+    int x,y;
+    for(y=0; y<Y; y++)
+    {
+        for(x=0; x<X; x++)
+        {
+            if(posy==y&&posx==x)
+                printf("●");//头是5
+            else if(Maze[y][x]==1)
+                printf("■");
+            else //if(Maze[y][x]==0)
+                printf("  ");
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+//人开始解迷宫
+int Solve_Maze(PERSON P,int M[Y][X],StPoint STP)
+{
+    int posx,posy;//定义人走的方向与位置的关系
+    while(1)
+    {
+        switch(P.dir)
+        {
+        case 1:
+            posx=P.posx+1;
+            posy=P.posy;
+            break;
+        case 2:
+            posx=P.posx;
+            posy=P.posy+1;
+            break;
+        case 3:
+            posx=P.posx-1;
+            posy=P.posy;
+            break;
+        case 4:
+            posx=P.posx;
+            posy=P.posy-1;
+            break;
+        }
+        if(M[posy][posx]==2)//2是终点标志
+            return 0;
+        if(M[posy][posx]==0)//0是空地标志
+        {
+            //保存当前人的信息并继续前进
+            Putin_a_data(&STP,P);
+            M[P.posy][P.posx]=3;//留下足迹3
+            P.posx=posx;
+            P.posy=posy;
+            P.dir=1;//位置信息置1
+            Prt_Maze(P.posy,P.posx);
+            continue;
+        }
+        if(M[posy][posx]==1||M[posy][posx]==3)
+        {
+            if(P.dir==4)//如果所有方向都是墙
+            {
+                M[P.posy][P.posx]=1;
+                Output_a_data(&STP,&P);
+                Prt_Maze(P.posy,P.posx);
+                continue;
+            }
+            P.dir++;
+            continue;
+        }
+    }
+}
+int main()
+{ PERSON P;
+//初始化人的信息
+    P.dir=1;
+    P.posx=1;
+    P.posy=1;
+//建立空栈
+    StPoint STP;
+    Create_a_Stack(STP);
+//打印迷宫
+    Prt_Maze(P.posy,P.posx);
+//走迷宫
+    Solve_Maze(P,Maze,STP);
+    scanf("%d");
+    return 0;
+}
